@@ -316,7 +316,6 @@ impl<'a> Bank<'a, InBank> {
     /// in-memory descriptor. Status & flag registers are not cleared, except
     /// for endpoint 0.
     fn flush_config(&mut self) {
-        let idx = self.index();
         let config = self.config().clone();
         {
             let desc = self.desc_bank();
@@ -327,7 +326,7 @@ impl<'a> Bank<'a, InBank> {
             desc.set_byte_count(0);
         }
 
-        self.epstatusclr(idx).write(|w| w.bk1rdy().set_bit());
+        self.setup_ep_interrupts();
     }
 
     /// Enables endpoint-specific interrupts. This is separate from reset()
@@ -436,9 +435,7 @@ impl<'a> Bank<'a, OutBank> {
     /// in-memory descriptor. Status & flag registers are not cleared, except
     /// for endpoint 0.
     fn flush_config(&mut self) {
-        let idx = self.index();
         let config = self.config().clone();
-
         {
             let desc = self.desc_bank();
 
@@ -448,7 +445,7 @@ impl<'a> Bank<'a, OutBank> {
             desc.set_byte_count(0);
         }
 
-        self.epstatusclr(idx).write(|w| w.bk0rdy().set_bit());
+        self.setup_ep_interrupts();
     }
 
     /// Enables endpoint-specific interrupts. This is separate from reset()
@@ -738,20 +735,6 @@ impl Inner {
             let cfg = self.epcfg(idx);
             let info = &self.endpoints.borrow().endpoints[idx];
 
-            if let Ok(mut bank) = self.bank0(EndpointAddress::from_parts(idx, UsbDirection::Out)) {
-                bank.flush_config();
-            }
-            if let Ok(mut bank) = self.bank1(EndpointAddress::from_parts(idx, UsbDirection::In)) {
-                bank.flush_config();
-            }
-
-            cfg.modify(|_, w| unsafe {
-                w.eptype0()
-                    .bits(info.bank0.ep_type as u8)
-                    .eptype1()
-                    .bits(info.bank1.ep_type as u8)
-            });
-
             // Endpoint interrupts are configured after the write to EPTYPE, as it appears writes
             // to EPINTEN*[n] do not take effect unless the endpoint is already somewhat configured.
             // The datasheet is ambiguous here, section 38.8.3.7 (Device Interrupt EndPoint Set n)
@@ -760,11 +743,18 @@ impl Inner {
             // EPEN[n] is not a register that exists, nor does it align with any other terminology.
             // We assume this means setting EPCFG[n] to a non-zero value, but we do interrupt
             // configuration last to be sure.
+            cfg.modify(|_, w| unsafe {
+                w.eptype0()
+                    .bits(info.bank0.ep_type as u8)
+                    .eptype1()
+                    .bits(info.bank1.ep_type as u8)
+            });
+
             if let Ok(mut bank) = self.bank0(EndpointAddress::from_parts(idx, UsbDirection::Out)) {
-                bank.setup_ep_interrupts();
+                bank.flush_config();
             }
             if let Ok(mut bank) = self.bank1(EndpointAddress::from_parts(idx, UsbDirection::In)) {
-                bank.setup_ep_interrupts();
+                bank.flush_config();
             }
         }
     }
