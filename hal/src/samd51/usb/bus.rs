@@ -831,9 +831,6 @@ impl Inner {
         self.usb()
             .dadd
             .write(|w| unsafe { w.dadd().bits(addr).adden().set_bit() });
-        if let Ok(bank) = self.bank0(EndpointAddress::from_parts(0, UsbDirection::Out)) {
-            bank.clear_received_setup_interrupt();
-        }
     }
 
     fn poll(&self) -> PollResult {
@@ -944,10 +941,7 @@ impl Inner {
     fn read(&self, ep: EndpointAddress, buf: &mut [u8]) -> UsbResult<usize> {
         let mut bank = self.bank0(ep.into())?;
 
-        let bk0rdy = bank.is_ready();
-        let rxstp = bank.received_setup_interrupt();
-
-        if bk0rdy || rxstp {
+        if bank.is_ready() {
             let size = bank.read(buf);
 
             // self.print_epstatus(idx, "read");
