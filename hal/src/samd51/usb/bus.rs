@@ -327,15 +327,15 @@ impl<'a> Bank<'a, InBank> {
             desc.set_byte_count(0);
         }
 
-        self.epstatusclr(idx)
-            .write(|w| w.bk1rdy().set_bit());
+        self.epstatusclr(idx).write(|w| w.bk1rdy().set_bit());
     }
 
     /// Enables endpoint-specific interrupts. This is separate from reset()
     /// as the EPINTENSET[n] documentation is ambiguous on writes sticking
     /// when EPEN[n] is zero. As such, these interrupts are configured last.
     fn setup_ep_interrupts(&mut self) {
-        self.epintenset(self.index()).write(|w| w.trcpt1().set_bit());
+        self.epintenset(self.index())
+            .write(|w| w.trcpt1().set_bit());
     }
 
     /// Prepares to transfer a series of bytes by copying the data into the
@@ -448,8 +448,7 @@ impl<'a> Bank<'a, OutBank> {
             desc.set_byte_count(0);
         }
 
-        self.epstatusclr(idx)
-            .write(|w| w.bk0rdy().set_bit());
+        self.epstatusclr(idx).write(|w| w.bk0rdy().set_bit());
     }
 
     /// Enables endpoint-specific interrupts. This is separate from reset()
@@ -720,12 +719,9 @@ impl Inner {
         while usb.syncbusy.read().enable().bit_is_set() {}
 
         // Clear pending.
-        usb.intflag.write(|w| unsafe {
-            w.bits(usb.intflag.read().bits())
-        });
-        usb.intenset.write(|w| {
-            w.eorst().set_bit()
-        });
+        usb.intflag
+            .write(|w| unsafe { w.bits(usb.intflag.read().bits()) });
+        usb.intenset.write(|w| w.eorst().set_bit());
 
         // Configure the endpoints before we attach, as hosts may enumerate
         // before attempting a USB protocol reset.
@@ -842,7 +838,8 @@ impl Inner {
 
     fn poll(&self) -> PollResult {
         let intflags = self.usb().intflag.read();
-        if intflags.eorst().bit() { // end of reset interrupt
+        if intflags.eorst().bit() {
+            // end of reset interrupt
             self.usb().intflag.write(|w| w.eorst().set_bit());
             dbgprint!("PollResult::Reset\n");
             return PollResult::Reset;
