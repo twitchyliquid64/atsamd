@@ -13,6 +13,10 @@ use hal::prelude::*;
 use hal::entry;
 use hal::pac::{interrupt, CorePeripherals, Peripherals};
 
+use hal::dbgprint;
+use hal::time::Hertz;
+use hal::{uart, uart_debug};
+
 use hal::usb::UsbBus;
 use usb_device::bus::UsbBusAllocator;
 
@@ -39,6 +43,16 @@ fn main() -> ! {
             led.set_low().unwrap();
         });
     }
+    uart_debug::wire_uart(hal::uart(
+        &mut clocks,
+        Hertz(115200),
+        peripherals.SERCOM0,
+        &mut peripherals.PM,
+        pins.d0,
+        pins.d1,
+        &mut pins.port,
+    ));
+    dbgprint!("\n\n\n\n~========== STARTING ==========~\n");
 
     let bus_allocator = unsafe {
         USB_ALLOCATOR = Some(hal::usb_allocator(
