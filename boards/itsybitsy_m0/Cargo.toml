@@ -56,4 +56,4 @@ name = "spi_ssd1306"
 
 [[example]]
 name = "usb_echo"
-required-features = ["usb", "use_uart_debug"]
+required-features = ["usb"]
