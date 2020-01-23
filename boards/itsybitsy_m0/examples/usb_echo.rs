@@ -6,6 +6,7 @@ extern crate panic_halt;
 extern crate usbd_serial;
 extern crate usb_device;
 extern crate cortex_m;
+extern crate cortex_m_rt;
 
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
@@ -25,6 +26,7 @@ use usbd_serial::{SerialPort, USB_CLASS_CDC};
 
 use cortex_m::asm::delay as cycle_delay;
 use cortex_m::peripheral::NVIC;
+use cortex_m_rt::{exception, ExceptionFrame};
 
 #[entry]
 fn main() -> ! {
@@ -84,10 +86,8 @@ fn main() -> ! {
     }
 
     loop {
-        // cycle_delay(5 * 1024 * 1024);
-        // red_led.set_high().unwrap();
-        // cycle_delay(5 * 1024 * 1024);
-        // red_led.set_low().unwrap();
+        cycle_delay(15 * 1024 * 1024);
+        unsafe { RED_LED.as_mut().map(|led| led.toggle() ); }
     }
 }
 
@@ -98,7 +98,7 @@ static mut USB_SERIAL: Option<SerialPort<UsbBus>> = None;
 
 fn poll_usb() {
     unsafe {
-        RED_LED.as_mut().map(|led| led.toggle() );
+        //RED_LED.as_mut().map(|led| led.toggle() );
         USB_BUS.as_mut().map(|usb_dev| {
             USB_SERIAL.as_mut().map(|serial| {
                 usb_dev.poll(&mut [serial]);
@@ -120,4 +120,16 @@ fn poll_usb() {
 #[interrupt]
 fn USB() {
     poll_usb();
+}
+
+#[exception]
+fn HardFault(ef: &ExceptionFrame) -> ! {
+    dbgprint!("hard_fault");
+    panic!("{:#?}", ef);
+}
+
+#[exception]
+fn DefaultHandler(irqn: i16) {
+    dbgprint!("default_handler");
+    panic!("Unhandled exception (IRQn = {})", irqn);
 }

@@ -429,7 +429,7 @@ fn configure_and_enable_dfll48m(sysctrl: &mut SYSCTRL, use_external_crystal: boo
             w.ccdis().set_bit();
 
             // usb correction
-            w.usbcrm().set_bit();
+            // w.usbcrm().set_bit();
 
             // bypass coarse lock (have calibration data)
             w.bplckc().set_bit()

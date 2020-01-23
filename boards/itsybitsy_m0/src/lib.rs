@@ -237,10 +237,12 @@ pub fn usb_allocator(
     dp: gpio::Pa25<Input<Floating>>,
     port: &mut Port,
 ) -> UsbBusAllocator<UsbBus> {
+    pm.apbbmask.modify(|_, w| w.usb_().set_bit());
+
     let gclk0 = clocks.gclk0();
-    dbgprint!("making usb clock");
+    let clock_speed: Hertz = gclk0.into();
+    dbgprint!("gclk0 speed: {:?}\n", clock_speed);
     let usb_clock = &clocks.usb(&gclk0).unwrap();
-    dbgprint!("got clock");
 
     UsbBusAllocator::new(UsbBus::new(
         usb_clock,
