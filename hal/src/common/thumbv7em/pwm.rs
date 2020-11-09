@@ -83,11 +83,10 @@ impl $TYPE {
         pinout: $pinout,
         mclk: &mut MCLK,
     ) -> Self {
-        let freq = freq.into();
         {
             let count = tc.count16();
 
-            let params = TimerParams::new(freq, clock.freq().0);
+            let params = TimerParams::new(freq, clock.freq());
 
             mclk.$apmask.modify(|_, w| w.$apbits().set_bit());
             count.ctrla.write(|w| w.swrst().set_bit());
@@ -132,8 +131,7 @@ impl $TYPE {
     where
         P: Into<Hertz>
     {
-        let period = period.into();
-        let params = TimerParams::new(period, self.clock_freq.0);
+        let params = TimerParams::new(period, self.clock_freq);
 
         let count = self.tc.count16();
         count.ctrla.modify(|_, w| w.enable().clear_bit());
@@ -397,9 +395,8 @@ impl $TYPE {
         pinout: $pinout,
         mclk: &mut MCLK,
     ) -> Self {
-        let freq = freq.into();
         {
-            let params = TimerParams::new(freq, clock.freq().0);
+            let params = TimerParams::new(freq, clock.freq());
 
             mclk.$apmask.modify(|_, w| w.$apbits().set_bit());
             tcc.ctrla.write(|w| w.swrst().set_bit());
@@ -476,8 +473,7 @@ impl Pwm for $TYPE {
     where
         P: Into<Self::Time>,
     {
-        let period = period.into();
-        let params = TimerParams::new(period, self.clock_freq.0);
+        let params = TimerParams::new(period, self.clock_freq);
 
         self.tcc.ctrla.modify(|_, w| w.enable().clear_bit());
         while self.tcc.syncbusy.read().enable().bit_is_set() {}
