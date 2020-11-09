@@ -5,8 +5,8 @@ use crate::target_device::{PM, TC3, TC4, TC5};
 use hal::timer::{CountDown, Periodic};
 
 use crate::clock;
-use crate::time::{Hertz, Nanoseconds};
 use crate::timer_traits::InterruptDrivenTimer;
+use embedded_time::{duration::Nanoseconds, rate::Hertz};
 use void::Void;
 
 use cortex_m::asm::delay as cycle_delay;
