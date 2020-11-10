@@ -2,11 +2,11 @@
 
 use super::{hal, pac::MCLK, pac::SERCOM2, pac::SERCOM4, target_device};
 
+use embedded_time::rate::*;
 use hal::clock::*;
 use hal::define_pins;
 use hal::gpio::{self, *};
 use hal::sercom::{I2CMaster2, I2CMaster4, PadPin, Sercom4Pad0, Sercom4Pad1, UART4};
-use hal::time::Hertz;
 #[cfg(feature = "adxl343")]
 use hal::{prelude::*, sercom::I2CError};
 
@@ -183,7 +183,7 @@ impl Accelerometer {
         >,
         adxl343::accelerometer::Error<I2CError>,
     > {
-        Adxl343::new(self.i2c_master(clocks, 100.khz(), sercom, mclk, port))
+        Adxl343::new(self.i2c_master(clocks, 100_000.Hz(), sercom, mclk, port))
     }
 
     /// Configure accelerometer's SDA and SCL pins as an I2C master"

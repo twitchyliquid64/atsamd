@@ -10,8 +10,8 @@ pub use cortex_m_rt::entry;
 use hal::prelude::*;
 use hal::*;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
-use hal::time::Hertz;
 
 use hal::sercom::{PadPin, UART5};
 

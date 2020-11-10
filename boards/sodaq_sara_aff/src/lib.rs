@@ -16,9 +16,9 @@ pub use hal::target_device as pac;
 
 use gpio::{Floating, Input, PfD, Port};
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::sercom::{PadPin, UART5};
-use hal::time::Hertz;
 
 define_pins!(
     /// Maps the pins to their arduino names and

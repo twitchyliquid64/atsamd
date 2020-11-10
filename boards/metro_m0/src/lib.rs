@@ -12,12 +12,12 @@ pub use hal::common::*;
 pub use hal::samd21::*;
 pub use hal::target_device as pac;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 #[cfg(feature = "usb")]
 use hal::gpio::IntoFunction;
 use hal::gpio::{Floating, Input, PfC, Port};
 use hal::sercom::{I2CMaster3, PadPin, SPIMaster4, SPIMaster5, UART0};
-use hal::time::Hertz;
 
 #[cfg(feature = "usb")]
 use hal::usb::usb_device::bus::UsbBusAllocator;
@@ -162,7 +162,7 @@ pub fn flash_spi_master(
     let gclk0 = clocks.gclk0();
     let flash = SPIMaster5::new(
         &clocks.sercom5_core(&gclk0).unwrap(),
-        48.mhz(),
+        48_000_000.Hz(),
         hal::hal::spi::Mode {
             phase: hal::hal::spi::Phase::CaptureOnFirstTransition,
             polarity: hal::hal::spi::Polarity::IdleLow,

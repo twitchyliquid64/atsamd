@@ -4,8 +4,8 @@ use crate::hal::serial;
 use crate::sercom::pads::*;
 use crate::target_device::sercom0::USART;
 use crate::target_device::{PM, SERCOM0, SERCOM1};
-use crate::time::Hertz;
 use core::fmt;
+use embedded_time::rate::Hertz;
 
 /// The RxpoTxpo trait defines a way to get the data in and data out pin out
 /// values for a given UARTXPadout configuration. You should not implement

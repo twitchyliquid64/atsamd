@@ -5,6 +5,7 @@ use super::{
     pac::SERCOM7, target_device,
 };
 
+use embedded_time::rate::*;
 use hal::define_pins;
 use hal::gpio::{self, *};
 use hal::sercom::{
@@ -12,7 +13,6 @@ use hal::sercom::{
     Sercom4Pad0, Sercom4Pad1, Sercom5Pad0, Sercom5Pad1, Sercom6Pad0, Sercom6Pad1, UART0, UART1,
     UART4, UART5,
 };
-use hal::time::Hertz;
 
 use embedded_hal::{digital::v1_compat::OldOutputPin, timer::CountDown, timer::Periodic};
 use ws2812_timer_delay as ws2812;

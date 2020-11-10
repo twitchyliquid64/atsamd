@@ -42,7 +42,7 @@ impl<TC> CountDown for TimerCounter<TC>
 where
     TC: Count16,
 {
-    type Time = Nanoseconds;
+    type Time = Nanoseconds<u64>;
 
     fn start<T>(&mut self, timeout: T)
     where

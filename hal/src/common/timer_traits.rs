@@ -3,7 +3,7 @@ use embedded_time::duration::*;
 
 /// Trait for timers that can enable & disable an interrupt that fires
 /// when the timer expires
-pub trait InterruptDrivenTimer: CountDown<Time = Nanoseconds> + Periodic {
+pub trait InterruptDrivenTimer: CountDown<Time = Nanoseconds<u64>> + Periodic {
     /// Enable the timer interrupt
     fn enable_interrupt(&mut self);
 

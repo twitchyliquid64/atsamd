@@ -7,12 +7,12 @@ extern crate panic_halt;
 extern crate embedded_graphics;
 extern crate ssd1306;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::entry;
 use hal::pac::{CorePeripherals, Peripherals};
 use hal::prelude::*;
-use hal::time::MegaHertz;
 
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
@@ -37,7 +37,7 @@ fn main() -> ! {
 
     let spi = hal::spi_master(
         &mut clocks,
-        MegaHertz(10),
+        10_000_000.Hz(),
         peripherals.SERCOM4,
         &mut peripherals.PM,
         pins.sck,

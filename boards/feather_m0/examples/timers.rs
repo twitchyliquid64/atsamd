@@ -10,6 +10,7 @@ extern crate panic_halt;
 #[cfg(feature = "use_semihosting")]
 extern crate panic_semihosting;
 
+use embedded_time::duration::Nanoseconds;
 use hal::clock::GenericClockController;
 use hal::entry;
 use hal::pac::Peripherals;
@@ -37,7 +38,7 @@ fn main() -> ! {
     // instantiate a timer objec for the TC4 peripheral
     let mut timer = TimerCounter::tc4_(tc45, peripherals.TC4, &mut peripherals.PM);
     // start a 5Hz timer
-    timer.start(5.hz());
+    timer.start(5u32.Hz().to_duration::<Nanoseconds>().unwrap());
 
     // toggle the red LED at the frequency set by the timer
     loop {

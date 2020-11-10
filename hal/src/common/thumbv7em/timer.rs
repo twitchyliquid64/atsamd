@@ -46,26 +46,21 @@ pub trait Count16 {
     fn count_16(&self) -> &COUNT16;
 }
 
+
 impl<TC> Periodic for TimerCounter<TC> {}
 impl<TC> CountDown for TimerCounter<TC>
 where
     TC: Count16,
 {
-    type Time = Nanoseconds;
+    type Time = Nanoseconds<u64>;
 
     fn start<T>(&mut self, timeout: T)
     where
         T: Into<Self::Time>,
     {
-        let ns: Nanoseconds<u32> = timeout.into();
-        let params = Fraction::new_reduce(
-            *self.freq.integer(),
-            *ns.to_rate::<Hertz<u32>>().unwrap().integer(),
-        )
-        .unwrap();
-
-        let divider = *params.numerator();
-        let cycles = *params.denominator();
+        let params = TimerParams::new_us(timeout, self.freq);
+        let divider = params.divider;
+        let cycles = params.cycles;
         let count = self.tc.count_16();
 
         // Disable the timer while we reconfigure it

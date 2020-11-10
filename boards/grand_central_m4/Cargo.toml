@@ -1,9 +1,7 @@
 [package]
 name = "grand_central_m4"
 version = "0.1.1"
-authors = [
-    "Dustin Little <dlittle@toyatech.net>"
-]
+authors = ["Dustin Little <dlittle@toyatech.net>"]
 description = "Board Support crate for the Adafruit Grand Central M4 Express"
 keywords = ["no-std", "arm", "cortex-m", "embedded-hal"]
 license = "MIT OR Apache-2.0"
@@ -14,6 +12,7 @@ readme = "README.md"
 [dependencies]
 cortex-m = "0.6"
 embedded-hal = "0.2.3"
+embedded-time = "0.10"
 smart-leds = "0.3"
 ws2812-spi = "0.2.0"
 nb = "0.1"
