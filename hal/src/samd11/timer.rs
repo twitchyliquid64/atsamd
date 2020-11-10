@@ -6,7 +6,7 @@ use crate::timer_traits::InterruptDrivenTimer;
 use hal::timer::{CountDown, Periodic};
 
 use crate::clock;
-use crate::time::{Hertz, Nanoseconds};
+use embedded_time::{duration::Nanoseconds, rate::Hertz};
 use void::Void;
 
 /// A generic hardware timer counter.
@@ -36,13 +36,13 @@ impl<TC> CountDown for TimerCounter<TC>
 where
     TC: Count16,
 {
-    type Time = Nanoseconds;
+    type Time = Nanoseconds<u64>;
 
     fn start<T>(&mut self, timeout: T)
     where
         T: Into<Self::Time>,
     {
-        let params = TimerParams::new_us(timeout, self.freq.0);
+        let params = TimerParams::new_us(timeout, Hertz(self.freq.0 as u64));
         let divider = params.divider;
         let cycles = params.cycles;
 
@@ -168,21 +168,23 @@ pub struct TimerParams {
 }
 
 impl TimerParams {
-    pub fn new<T>(timeout: T, src_freq: u32) -> Self
+    pub fn new<T, F>(timeout: T, src_freq: F) -> Self
     where
         T: Into<Hertz>,
+        F: Into<Hertz>,
     {
         let timeout = timeout.into();
-        let ticks: u32 = src_freq / timeout.0.max(1);
+        let ticks: u32 = src_freq.into().0 / timeout.0.max(1u32);
         Self::new_from_ticks(ticks)
     }
 
-    pub fn new_us<T>(timeout: T, src_freq: u32) -> Self
+    pub fn new_us<T, F>(timeout: T, src_freq: F) -> Self
     where
-        T: Into<Nanoseconds>,
+        T: Into<Nanoseconds<u64>>,
+        F: Into<Hertz<u64>>,
     {
         let timeout = timeout.into();
-        let ticks: u32 = (timeout.0 as u64 * src_freq as u64 / 1_000_000_000_u64) as u32;
+        let ticks: u32 = (timeout.0 * src_freq.into().0 / 1_000_000_000_u64) as u32;
         Self::new_from_ticks(ticks)
     }
 

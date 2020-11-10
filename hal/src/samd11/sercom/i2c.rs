@@ -4,7 +4,7 @@ use crate::clock;
 use crate::hal::blocking::i2c::{Read, Write, WriteRead};
 use crate::target_device::sercom0::I2CM;
 use crate::target_device::{PM, SERCOM0, SERCOM1};
-use crate::time::Hertz;
+use embedded_time::rate::Hertz;
 
 const BUS_STATE_IDLE: u8 = 1;
 const BUS_STATE_OWNED: u8 = 2;
