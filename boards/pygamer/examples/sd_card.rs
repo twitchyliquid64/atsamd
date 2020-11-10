@@ -23,12 +23,12 @@ use embedded_graphics::{egrectangle, primitive_style};
 use embedded_graphics::{image::Image, image::ImageRaw, image::ImageRawLE};
 use embedded_hal::digital::v1_compat::OldOutputPin;
 use embedded_sdmmc::{TimeSource, Timestamp, VolumeIdx};
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::entry;
 use hal::pac::{CorePeripherals, Peripherals};
 use hal::prelude::*;
-use hal::time::MegaHertz;
 
 #[entry]
 fn main() -> ! {
@@ -50,7 +50,7 @@ fn main() -> ! {
     let sdmmc_cs: OldOutputPin<_> = pins.sd_cs_pin.into_push_pull_output(&mut pins.port).into();
     let sdmmc_spi = pins.spi.init(
         &mut clocks,
-        MegaHertz(3),
+        3_000_000.Hz(),
         peripherals.SERCOM1,
         &mut peripherals.MCLK,
         &mut pins.port,

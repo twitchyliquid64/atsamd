@@ -16,9 +16,9 @@ pub use hal::target_device as pac;
 
 use gpio::{Floating, Input, PfC, Port};
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::sercom::{I2CMaster0, PadPin, UART0};
-use hal::time::Hertz;
 
 define_pins!(
     /// Maps the pins to their physical pins.

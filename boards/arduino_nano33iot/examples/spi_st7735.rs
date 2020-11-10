@@ -5,12 +5,12 @@ extern crate arduino_nano33iot as hal;
 extern crate embedded_graphics;
 extern crate st7735_lcd;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::entry;
 use hal::pac::{CorePeripherals, Peripherals};
 use hal::prelude::*;
-use hal::time::MegaHertz;
 
 use embedded_graphics::{
     image::{Image, ImageRaw, ImageRawLE},
@@ -41,7 +41,7 @@ fn main() -> ! {
 
     let spi = hal::spi_master(
         &mut clocks,
-        MegaHertz(16),
+        16_000_000.Hz(),
         peripherals.SERCOM1,
         &mut peripherals.PM,
         pins.led_sck,

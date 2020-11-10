@@ -16,10 +16,10 @@ pub use hal::target_device as pac;
 
 use gpio::{self, *};
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::define_pins;
 use hal::sercom::{I2CMaster2, PadPin, UART0};
-use hal::time::Hertz;
 
 #[cfg(feature = "unproven")]
 use apa102_spi::Apa102;

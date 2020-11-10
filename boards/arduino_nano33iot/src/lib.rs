@@ -13,10 +13,10 @@ pub extern crate panic_halt;
 use hal::prelude::*;
 use hal::*;
 
+use embedded_time::rate::*;
 use gpio::{Floating, Input, PfC, PfD, Port};
 use hal::clock::GenericClockController;
 use hal::sercom::{I2CMaster4, PadPin, SPIMaster1, UART5};
-use hal::time::Hertz;
 
 pub use hal::common::*;
 pub use hal::samd21::*;

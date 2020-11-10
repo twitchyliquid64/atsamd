@@ -8,6 +8,7 @@ extern crate feather_m4 as hal;
 extern crate nb;
 extern crate panic_halt;
 
+use embedded_time::duration::Nanoseconds;
 use hal::clock::GenericClockController;
 use hal::entry;
 use hal::pac::Peripherals;
@@ -38,7 +39,7 @@ fn main() -> ! {
     //Instantiate a timer object for the TC2 peripheral
     let mut timer = TimerCounter::tc2_(&timer_clock, peripherals.TC2, &mut peripherals.MCLK);
     // Start the timer such that it runs at 50Hz
-    timer.start(50u32.hz());
+    timer.start(50u32.Hz().to_duration::<Nanoseconds>().unwrap());
 
     // Toggle the red LED at the frequency set by the timer above.
     loop {

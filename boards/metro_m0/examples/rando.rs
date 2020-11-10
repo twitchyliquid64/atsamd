@@ -29,6 +29,7 @@ macro_rules! dbgprint {
     ($($arg:tt)*) => {{}};
 }
 
+use embedded_time::duration::Nanoseconds;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 // use hal::gpio;
@@ -78,7 +79,7 @@ const APP: () = {
 
     #[init]
     fn init(c: init::Context) -> init::LateResources {
-        let interval = 1.hz();
+        let interval = 1u32.Hz().to_duration::<Nanoseconds>().unwrap();
 
         let mut device = c.device;
         let core = CorePeripherals::take().unwrap();
@@ -116,7 +117,7 @@ const APP: () = {
         /*
             let mut spi = SPIMaster4::new(
                 &clocks.sercom4_core(&gclk0).unwrap(),
-                24.mhz(),
+                24_000_000.Hz(),
                 hal::hal::spi::Mode {
                     phase: hal::hal::spi::Phase::CaptureOnFirstTransition,
                     polarity: hal::hal::spi::Polarity::IdleLow,
@@ -180,7 +181,7 @@ const APP: () = {
 
         let mut i2c = hal::i2c_master(
             &mut clocks,
-            400.khz(),
+            400_000.Hz(),
             device.SERCOM3,
             &mut device.PM,
             pins.sda,

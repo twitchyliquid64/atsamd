@@ -16,12 +16,12 @@ extern crate arduino_nano33iot as hal;
 extern crate rand;
 extern crate ssd1306;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::entry;
 use hal::pac::{CorePeripherals, Peripherals};
 use hal::prelude::*;
-use hal::time::KiloHertz;
 
 use ssd1306::{mode::displaymode::DisplayModeTrait, prelude::*, Builder, I2CDIBuilder};
 
@@ -47,7 +47,7 @@ fn main() -> ! {
 
     let i2c = hal::i2c_master(
         &mut clocks,
-        KiloHertz(400),
+        400_000.Hz(),
         peripherals.SERCOM4,
         &mut peripherals.PM,
         pins.sda,

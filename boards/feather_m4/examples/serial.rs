@@ -8,6 +8,7 @@ extern crate panic_halt;
 #[macro_use(block)]
 extern crate nb;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::entry;
@@ -16,7 +17,6 @@ use hal::pac::gclk::pchctrl::GEN_A;
 use hal::pac::{CorePeripherals, Peripherals};
 use hal::prelude::*;
 use hal::sercom::{PadPin, Sercom5Pad0, Sercom5Pad1, UART5};
-use hal::time::Hertz;
 
 #[entry]
 fn main() -> ! {

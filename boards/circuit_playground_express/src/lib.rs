@@ -9,10 +9,10 @@ pub use hal::common::*;
 pub use hal::samd21::*;
 pub use hal::target_device as pac;
 
+use embedded_time::rate::*;
 use gpio::{Floating, Input, Output, Port, PushPull};
 use hal::clock::GenericClockController;
 use hal::sercom::{I2CMaster5, PadPin, SPIMaster3};
-use hal::time::Hertz;
 
 define_pins!(
     /// Maps the pins to their arduino names and
@@ -87,7 +87,7 @@ pub fn flash_spi_master(
     let gclk0 = clocks.gclk0();
     let flash = SPIMaster3::new(
         &clocks.sercom3_core(&gclk0).unwrap(),
-        48.mhz(),
+        48_000_000.Hz(),
         hal::hal::spi::Mode {
             phase: hal::hal::spi::Phase::CaptureOnFirstTransition,
             polarity: hal::hal::spi::Polarity::IdleLow,

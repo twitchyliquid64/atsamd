@@ -5,11 +5,11 @@ use super::{hal, pac, target_device};
 #[cfg(feature = "unproven")]
 use embedded_hal::timer::{CountDown, Periodic};
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::define_pins;
 use hal::gpio::{self, *};
 use hal::sercom::{I2CMaster3, PadPin, SPIMaster4, UART0};
-use hal::time::Hertz;
 
 #[cfg(feature = "unproven")]
 use apa102_spi::Apa102;

@@ -9,6 +9,7 @@ pub use hal::common::*;
 pub use hal::samd21::*;
 pub use hal::target_device as pac;
 
+use embedded_time::rate::*;
 use hal::prelude::*;
 use hal::{
     clock::GenericClockController,
@@ -18,7 +19,6 @@ use hal::{
     pad::PadPin,
     sercom::{I2CMaster2, SPIMaster0, UART4},
     target_device,
-    time::Hertz,
 };
 
 #[cfg(feature = "usb")]

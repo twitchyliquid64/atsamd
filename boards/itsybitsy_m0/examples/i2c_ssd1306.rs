@@ -7,12 +7,12 @@ extern crate panic_halt;
 extern crate embedded_graphics;
 extern crate ssd1306;
 
+use embedded_time::rate::*;
 use hal::clock::GenericClockController;
 use hal::delay::Delay;
 use hal::entry;
 use hal::pac::{CorePeripherals, Peripherals};
 use hal::prelude::*;
-use hal::time::KiloHertz;
 
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
@@ -37,7 +37,7 @@ fn main() -> ! {
 
     let i2c = hal::i2c_master(
         &mut clocks,
-        KiloHertz(400),
+        400_000.Hz(),
         peripherals.SERCOM3,
         &mut peripherals.PM,
         pins.sda,

@@ -4,6 +4,7 @@
 use panic_halt as _;
 use pygamer as hal;
 
+use embedded_time::duration::Nanoseconds;
 use hal::clock::GenericClockController;
 use hal::gpio::{OpenDrain, Output, Pa23};
 use hal::pins::Keys;
@@ -57,7 +58,7 @@ const APP: () = {
 
         let mut tc3 = hal::timer::TimerCounter::tc3_(&timer_clock, device.TC3, &mut device.MCLK);
 
-        tc3.start(200.hz());
+        tc3.start(200u32.Hz().to_duration::<Nanoseconds>().unwrap());
         tc3.enable_interrupt();
 
         init::LateResources {

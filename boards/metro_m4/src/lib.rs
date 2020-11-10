@@ -15,10 +15,10 @@ pub use hal::common::*;
 pub use hal::samd51::*;
 pub use hal::target_device as pac;
 
+use embedded_time::rate::*;
 use gpio::{Floating, Input, PfC, Port};
 use hal::clock::GenericClockController;
 use hal::sercom::{I2CMaster5, PadPin, SPIMaster2, UART3};
-use hal::time::Hertz;
 use pac::MCLK;
 
 #[cfg(feature = "usb")]

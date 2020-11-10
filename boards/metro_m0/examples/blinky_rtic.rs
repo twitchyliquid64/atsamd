@@ -3,6 +3,7 @@
 
 use metro_m0 as hal;
 
+use embedded_time::duration::Nanoseconds;
 use hal::clock::GenericClockController;
 use hal::prelude::*;
 use rtic::app;
@@ -66,7 +67,7 @@ const APP: () = {
             &mut device.PM,
         );
         dbgprint!("start timer");
-        tc3.start(1.hz());
+        tc3.start(1u32.Hz().to_duration::<Nanoseconds>().unwrap());
         tc3.enable_interrupt();
 
         dbgprint!("done init");
