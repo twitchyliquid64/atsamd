@@ -4,13 +4,20 @@ use crate::{
     target_device::{MCLK, QSPI},
 };
 
+use core::marker::PhantomData;
+
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Error {
     /// The command you selected cannot be performed by this function
     CommandFunctionMismatch,
 }
 
-pub struct Qspi {
+/// Qspi used for read/write of fixed-size octet buffers
+pub struct OneShot;
+/// Qspi is memory-mapped as read/execute
+pub struct XIP;
+
+pub struct Qspi<MODE> {
     qspi: QSPI,
     _sck: Pb10<PfH>,
     _cs: Pb11<PfH>,
@@ -18,9 +25,10 @@ pub struct Qspi {
     _io1: Pa9<PfH>,
     _io2: Pa10<PfH>,
     _io3: Pa11<PfH>,
+    _mode: PhantomData<MODE>,
 }
 
-impl Qspi {
+impl Qspi<OneShot> {
     /// Enable the clocks for the qspi peripheral in single data rate mode
     /// assuming 120mhz system clock, for 4mhz spi mode 0 operation.
     pub fn new(
@@ -33,7 +41,7 @@ impl Qspi {
         _io1: Pa9<Input<Floating>>,
         _io2: Pa10<Input<Floating>>,
         _io3: Pa11<Input<Floating>>,
-    ) -> Qspi {
+    ) -> Qspi<OneShot> {
         mclk.apbcmask.modify(|_, w| w.qspi_().set_bit());
         // Enable the clocks for the qspi peripheral in single data rate mode.
         mclk.ahbmask.modify(|_, w| {
@@ -68,7 +76,7 @@ impl Qspi {
 
         qspi.ctrla.modify(|_, w| w.enable().set_bit());
 
-        Qspi {
+        Self {
             qspi,
             _sck,
             _cs,
@@ -76,9 +84,13 @@ impl Qspi {
             _io1,
             _io2,
             _io3,
+            _mode: PhantomData,
         }
     }
+}
 
+// (Mostly internal) methods available in any mode.
+impl<MODE> Qspi<MODE> {
     unsafe fn run_write_instruction(
         &self,
         command: Command,
@@ -108,13 +120,7 @@ impl Qspi {
             core::ptr::copy(buf.as_ptr(), (QSPI_AHB + addr) as *mut u8, buf.len());
         }
 
-        self.qspi.ctrla.write(|w| {
-            w.enable().set_bit();
-            w.lastxfer().set_bit()
-        });
-
-        while self.qspi.intflag.read().instrend().bit_is_clear() {}
-        self.qspi.intflag.write(|w| w.instrend().set_bit());
+        self.finalize_transfer();
     }
 
     unsafe fn run_read_instruction(
@@ -123,6 +129,7 @@ impl Qspi {
         tfm: TransferMode,
         addr: u32,
         buf: &mut [u8],
+        finalize: bool,
     ) {
         self.qspi
             .instrctrl
@@ -142,6 +149,14 @@ impl Qspi {
         if buf.len() > 0 {
             core::ptr::copy((QSPI_AHB + addr) as *mut u8, buf.as_mut_ptr(), buf.len());
         }
+
+        if finalize {
+            self.finalize_transfer();
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn finalize_transfer(&self) {
         self.qspi.ctrla.write(|w| {
             w.enable().set_bit();
             w.lastxfer().set_bit()
@@ -149,6 +164,70 @@ impl Qspi {
 
         while self.qspi.intflag.read().instrend().bit_is_clear() {}
         self.qspi.intflag.write(|w| w.instrend().set_bit());
+    }
+
+    /// Set the clock divider, relative to the main clock
+    ///
+    /// This fn safely subtracts 1 from your input value as the underlying fn is
+    /// SCK Baud = MCKL / (value + 1)
+    ///
+    /// ex if MCLK is 120mhz
+    /// value  0 is reduced to  0 results in 120mhz clock
+    /// value  1 is reduced to  0 results in 120mhz clock
+    /// value  2 is reduced to  1 results in  60mhz clock
+    pub fn set_clk_divider(&mut self, value: u8) {
+        // The baud register is divisor - 1
+        self.qspi
+            .baud
+            .write(|w| unsafe { w.baud().bits(value.saturating_sub(1)) });
+    }
+
+}
+
+/// Operations available in XIP mode
+impl Qspi<XIP> {
+    /// Latches the peripheral in a read/execute state, so it can be used to
+    /// read or execute directly from flash.
+    pub fn into_oneshot(self) -> Qspi<OneShot> {
+        unsafe { self.finalize_transfer() };
+
+        Qspi::<OneShot> {
+            qspi: self.qspi,
+            _sck: self._sck,
+            _cs: self._cs,
+            _io0: self._io0,
+            _io1: self._io1,
+            _io2: self._io2,
+            _io3: self._io3,
+            _mode: PhantomData,
+        }
+    }
+}
+
+/// Operations available in one-shot mode
+impl Qspi<OneShot> {
+    /// Latches the peripheral in a read/execute state, so it can be used to
+    /// read or execute directly from flash.
+    pub fn into_xip(self) -> Qspi<XIP> {
+        let tfm = TransferMode {
+            data_enable: true,
+            instruction_enable: true,
+            ..TransferMode::default()
+        };
+        unsafe {
+            self.run_read_instruction(Command::QuadRead, tfm, 0, &mut [], false);
+        }
+
+        Qspi::<XIP> {
+            qspi: self.qspi,
+            _sck: self._sck,
+            _cs: self._cs,
+            _io0: self._io0,
+            _io1: self._io1,
+            _io2: self._io2,
+            _io3: self._io3,
+            _mode: PhantomData,
+        }
     }
 
     /// Run a generic command that neither takes nor receives data
@@ -167,7 +246,7 @@ impl Qspi {
             ..TransferMode::default()
         };
         unsafe {
-            self.run_read_instruction(command, tfm, 0, &mut []);
+            self.run_read_instruction(command, tfm, 0, &mut [], true);
         }
         Ok(())
     }
@@ -190,7 +269,7 @@ impl Qspi {
             ..TransferMode::default()
         };
         unsafe {
-            self.run_read_instruction(command, tfm, 0, response);
+            self.run_read_instruction(command, tfm, 0, response, true);
         }
         Ok(())
     }
@@ -248,7 +327,7 @@ impl Qspi {
             ..TransferMode::default()
         };
 
-        unsafe { self.run_read_instruction(Command::QuadRead, tfm, addr, buf) };
+        unsafe { self.run_read_instruction(Command::QuadRead, tfm, addr, buf, true) };
     }
 
     /// Page Program a sequential block of memory to addr.
@@ -273,22 +352,6 @@ impl Qspi {
             ..TransferMode::default()
         };
         unsafe { self.run_write_instruction(Command::QuadPageProgram, tfm, addr, buf) };
-    }
-
-    /// Set the clock divider, relative to the main clock
-    ///
-    /// This fn safely subtracts 1 from your input value as the underlying fn is
-    /// SCK Baud = MCKL / (value + 1)
-    ///
-    /// ex if MCLK is 120mhz
-    /// value  0 is reduced to  0 results in 120mhz clock
-    /// value  1 is reduced to  0 results in 120mhz clock
-    /// value  2 is reduced to  1 results in  60mhz clock
-    pub fn set_clk_divider(&mut self, value: u8) {
-        // The baud register is divisor - 1
-        self.qspi
-            .baud
-            .write(|w| unsafe { w.baud().bits(value.saturating_sub(1)) });
     }
 }
 

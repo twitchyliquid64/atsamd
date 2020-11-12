@@ -10,7 +10,7 @@ use wio_terminal as wio;
 
 use wio::hal::clock::GenericClockController;
 use wio::hal::delay::Delay;
-use wio::hal::qspi::Command;
+use wio::hal::qspi::{self, Command};
 use wio::pac::{CorePeripherals, Peripherals};
 use wio::prelude::*;
 use wio::{entry, Pins, Sets};
@@ -61,7 +61,7 @@ fn main() -> ! {
     flash.run_command(Command::WriteEnable).unwrap();
     flash.erase_command(Command::EraseChip, 0x0).unwrap();
 
-    let write_buf = [0x0d, 0xd0, 0x01, 0xc0];
+    let write_buf = [0x0d, 0xd0, 0x01, 0xc1];
     wait_ready(&mut flash);
     flash.write_memory(0, &write_buf);
 
@@ -70,11 +70,17 @@ fn main() -> ! {
     flash.read_memory(0, &mut read_buf);
 
     if read_buf != write_buf {
+        if read_buf == [0x0d, 0xd0, 0x01, 0xc1] {
+            loop {
+                user_led.toggle();
+                delay.delay_ms(80u8);
+            }
+        };
         // If we did not read back the same data flash the status
         // LED.
         loop {
             user_led.toggle();
-            delay.delay_ms(200u8);
+            delay.delay_ms(350u16);
         }
     }
 
@@ -83,13 +89,13 @@ fn main() -> ! {
 }
 
 /// Wait for the write-in-progress and suspended write/erase.
-fn wait_ready(flash: &mut wio::hal::qspi::Qspi) {
+fn wait_ready(flash: &mut qspi::Qspi<qspi::OneShot>) {
     while flash_status(flash, Command::ReadStatus) & 0x01 != 0 {}
     while flash_status(flash, Command::ReadStatus2) & 0x80 != 0 {}
 }
 
 /// Returns the contents of the status register indicated by cmd.
-fn flash_status(flash: &mut wio::hal::qspi::Qspi, cmd: Command) -> u8 {
+fn flash_status(flash: &mut qspi::Qspi<qspi::OneShot>, cmd: Command) -> u8 {
     let mut out = [0u8; 1];
     flash.read_command(cmd, &mut out).ok().unwrap();
     out[0]
